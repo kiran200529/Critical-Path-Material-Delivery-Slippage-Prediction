@@ -49,16 +49,8 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # If no token is provided, fall back to guest user for development/preview convenience,
-    # but raise exception if in production mode.
     if not token:
-        # For demonstration purposes, we will return the seed demo user if no token is passed.
-        # This makes API testing and browser UI access extremely smooth without forcing a login loop.
-        demo_user = db.query(User).filter(User.email == "demo@platform.com").first()
-        if demo_user:
-            return demo_user
         raise credentials_exception
-        
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         email: str = payload.get("sub")

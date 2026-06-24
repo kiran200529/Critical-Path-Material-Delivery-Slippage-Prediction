@@ -54,9 +54,7 @@ def init_db():
             
             # 1. Add Users
             users = [
-                User(name='Sarah Jenkins (Admin)', email='admin@platform.com', password='$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', role='Admin'),
-                User(name='David Miller (Procurement)', email='procurement@platform.com', password='$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', role='Procurement Manager'),
-                User(name='Elena Rostova (Project)', email='project@platform.com', password='$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', role='Project Manager')
+                User(name='Demo User', email='demo@platform.com', password='$2b$12$AocMs1kF/5JEGR7ZQpzNtu5ukN3SBulOEK4KMXPZ/ynOnsz9OSeHq', role='Application User')
             ]
             db.add_all(users)
             db.commit()

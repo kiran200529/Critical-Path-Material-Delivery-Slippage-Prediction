@@ -1,3 +1,123 @@
+
+const AUTH_TOKEN_KEY = "slippage_shield_access_token";
+const AUTH_USER_KEY = "slippage_shield_user";
+
+function getStoredToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function getStoredUser() {
+    try {
+        return JSON.parse(localStorage.getItem(AUTH_USER_KEY) || "{}");
+    } catch {
+        return {};
+    }
+}
+
+function authFetch(url, options = {}) {
+    const token = getStoredToken();
+    const headers = new Headers(options.headers || {});
+
+    if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    return window.fetch(url, {
+        ...options,
+        headers
+    });
+}
+
+function showApplication() {
+    document.body.classList.add("authenticated");
+
+    const storedUser = getStoredUser();
+    const userName = storedUser.name || "Demo User";
+
+    const userDisplayName = document.getElementById("user-display-name");
+    const userDisplayRole = document.getElementById("user-display-role");
+
+    if (userDisplayName) {
+        userDisplayName.textContent = userName;
+    }
+
+    if (userDisplayRole) {
+        userDisplayRole.textContent = "Application User";
+    }
+
+    if (!document.getElementById("logout-button")) {
+        const logoutBtn = document.createElement("button");
+        logoutBtn.id = "logout-button";
+        logoutBtn.className = "logout-button";
+        logoutBtn.textContent = "Logout";
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_USER_KEY);
+            window.location.reload();
+        });
+        document.body.appendChild(logoutBtn);
+    }
+}
+
+function showLogin() {
+    document.body.classList.remove("authenticated");
+}
+
+function setupLogin() {
+    const loginForm = document.getElementById("login-form");
+    const loginError = document.getElementById("login-error");
+
+    if (getStoredToken()) {
+        showApplication();
+        return;
+    }
+
+    showLogin();
+
+    if (!loginForm) {
+        return;
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+
+        if (loginError) {
+            loginError.textContent = "";
+        }
+
+        try {
+            const response = await window.fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                throw new Error("Invalid email or password.");
+            }
+
+            const data = await response.json();
+
+            localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { name: "Demo User" }));
+
+            window.location.reload();
+        } catch (error) {
+            if (loginError) {
+                loginError.textContent = error.message || "Login failed. Please try again.";
+            }
+        }
+    });
+}
+
+setupLogin();
+
+
 // Slippage Shield Client Application Logic
 
 const API_BASE = "/api";
@@ -311,10 +431,10 @@ function createTickerItemHTML(item) {
 // 5. MASTER DROP DOWNS POPULATION
 async function populateDropdowns() {
     try {
-        const supRes = await fetch(`${API_BASE}/suppliers`);
+        const supRes = await authFetch(`${API_BASE}/suppliers`);
         const suppliers = await supRes.json();
         
-        const matRes = await fetch(`${API_BASE}/suppliers/materials`);
+        const matRes = await authFetch(`${API_BASE}/suppliers/materials`);
         const materials = await matRes.json();
         
         const predMat = document.getElementById("pred-material");
@@ -357,7 +477,7 @@ async function triggerPlannerDefaults() {
     if (!supplierId || !materialId || !reqDate) return;
     
     try {
-        const res = await fetch(`${API_BASE}/planner/defaults?supplier_id=${supplierId}&material_id=${materialId}&required_delivery_date=${reqDate}`);
+        const res = await authFetch(`${API_BASE}/planner/defaults?supplier_id=${supplierId}&material_id=${materialId}&required_delivery_date=${reqDate}`);
         const defaults = await res.json();
         
         document.getElementById("planner-auto-calc-box").style.display = "block";
@@ -380,7 +500,7 @@ async function triggerPlannerDefaults() {
 // 6. DASHBOARD MODULE DATA LOAD
 async function loadDashboardData() {
     try {
-        const kpiRes = await fetch(`${API_BASE}/analytics/kpis`);
+        const kpiRes = await authFetch(`${API_BASE}/analytics/kpis`);
         const kpis = await kpiRes.json();
         
         document.getElementById("kpi-total-orders").textContent = kpis.total_orders;
@@ -606,7 +726,7 @@ document.getElementById("prediction-form").addEventListener("submit", async (e) 
     };
     
     try {
-        const res = await fetch(`${API_BASE}/predict`, {
+        const res = await authFetch(`${API_BASE}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -674,7 +794,7 @@ document.getElementById("prediction-form").addEventListener("submit", async (e) 
 // 8. SUPPLIER INTELLIGENCE LOAD
 async function loadSupplierData() {
     try {
-        const res = await fetch(`${API_BASE}/suppliers`);
+        const res = await authFetch(`${API_BASE}/suppliers`);
         const suppliers = await res.json();
         
         const topTable = document.getElementById("suppliers-top-performers-table");
@@ -762,7 +882,7 @@ document.getElementById("planner-form").addEventListener("submit", async (e) => 
     };
     
     try {
-        const res = await fetch(`${API_BASE}/planner/calculate`, {
+        const res = await authFetch(`${API_BASE}/planner/calculate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -813,7 +933,7 @@ document.getElementById("what-if-form").addEventListener("submit", async (e) => 
     };
     
     try {
-        const res = await fetch(`${API_BASE}/what-if/simulate`, {
+        const res = await authFetch(`${API_BASE}/what-if/simulate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -864,7 +984,7 @@ document.getElementById("what-if-form").addEventListener("submit", async (e) => 
 // 11. ANALYTICS CHARTS (Chart.js)
 async function loadAnalyticsData() {
     try {
-        const res = await fetch(`${API_BASE}/analytics/charts`);
+        const res = await authFetch(`${API_BASE}/analytics/charts`);
         const data = await res.json();
         
         const ctxTrend = document.getElementById("chart-monthly-trend").getContext("2d");
@@ -1023,7 +1143,7 @@ async function sendCopilotMessage() {
     chatHistory.scrollTop = chatHistory.scrollHeight;
     
     try {
-        const res = await fetch(`${API_BASE}/copilot/chat`, {
+        const res = await authFetch(`${API_BASE}/copilot/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question: text })
