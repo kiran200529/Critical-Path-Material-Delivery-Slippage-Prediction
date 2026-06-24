@@ -145,7 +145,7 @@ function launchConsole() {
     }, 400);
 }
 
-// Bind Launch Console Buttons
+// Bind Open Dashboard Buttons
 document.getElementById("btn-launch-console-nav").addEventListener("click", launchConsole);
 document.getElementById("btn-launch-console-hero").addEventListener("click", launchConsole);
 
