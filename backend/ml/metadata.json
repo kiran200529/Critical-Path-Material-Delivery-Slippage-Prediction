@@ -1,0 +1,7 @@
+{
+    "model_name": "Logistic Regression",
+    "target_column": "material_delivery_delayed_gt_3_working_days",
+    "threshold": 0.45,
+    "model_file": "final_model_pipeline.joblib",
+    "feature_count": 26
+}

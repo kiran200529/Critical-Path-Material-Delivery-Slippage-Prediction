@@ -1,176 +1,288 @@
 # Critical-Path Material Delivery Slippage Prediction
 
-## Project Overview
+This project is a machine learning-based construction procurement intelligence application designed to predict whether a scheduled site material delivery is likely to arrive more than three working days after the committed delivery date.
 
-This project focuses on predicting material delivery slippage in the construction supply chain. The main objective is to identify scheduled site material deliveries that are likely to arrive more than three working days after the committed gate delivery date.
+The application uses a trained Logistic Regression pipeline with threshold-based classification to identify high-risk material deliveries. It supports delivery risk prediction, business decision summaries, recommended action plans, supplier monitoring, procurement planning, what-if simulation, analytics visualization, and alert-style project monitoring.
 
-Using Machine Learning-based classification techniques, this project helps construction planners detect high-risk deliveries early and take preventive actions before the delay affects critical-path activities. The solution supports better planning, supplier coordination, carrier decisions, backup material arrangement, and site work re-sequencing.
+The main objective of this project is to help planners, procurement teams, and project managers identify risky material deliveries early so they can follow up with suppliers, arrange alternate carriers, resequence work, or escalate critical-path risks before delays affect construction progress.
 
-## Business Problem
+## Problem Statement
 
-Construction projects depend heavily on timely delivery of bulk and specialist materials. When important materials arrive late, site crews may remain idle, planned work may be disturbed, and project schedules may be delayed.
+Construction projects often depend on timely delivery of critical materials. If a scheduled material drop arrives late, downstream construction activities may be delayed, project sequencing may be affected, and critical-path work can suffer. Manual monitoring alone may not identify high-risk deliveries early enough for planners to take preventive action.
 
-Planners need a data-led way to predict which material deliveries are likely to slip beyond the committed delivery date by more than three working days.
+This project solves the problem by predicting whether a scheduled site material delivery will arrive more than three working days after the committed delivery date.
 
-The prediction helps construction teams act early by:
+## Prediction Target
 
-- Re-sequencing site work
-- Switching suppliers or carriers
-- Contacting suppliers in advance
-- Arranging backup materials
-- Protecting critical-path trades
-- Reducing project schedule disruption
+The machine learning target column used in this project is:
 
-## Project Objectives
+```text
+material_delivery_delayed_gt_3_working_days
+```
 
-- Predict whether a scheduled material delivery will be delayed by more than three working days
-- Analyze construction delivery patterns and supplier-related risk factors
-- Identify important features that influence delivery slippage
-- Build a machine learning model for early delivery risk prediction
-- Improve delay detection using threshold tuning
-- Support proactive construction planning and risk mitigation
+Target meaning:
 
-## Machine Learning Approach
+```text
+0 = Delivery is not delayed by more than three working days
+1 = Delivery is delayed by more than three working days
+```
 
-### Algorithm Used
+## Final Model Details
 
-Improved Random Forest Classifier
+The final deployed model is a threshold-tuned Logistic Regression pipeline.
 
-### Problem Type
+```text
+Model Type: Logistic Regression
+Decision Threshold: 0.45
+Prediction Method: predict_proba()
+Target: Delay greater than three working days
+Input Features: 26
+Model Artifact: backend/ml/final_model_pipeline.joblib
+Feature Columns: backend/ml/feature_columns.json
+Metadata File: backend/ml/metadata.json
+```
 
-Binary Classification
+Logistic Regression was selected because the project focuses on identifying delayed deliveries early. The model selection gives importance to delayed-class recall and F1-score, which are more useful for risk detection than accuracy alone.
 
-The model predicts two possible outcomes:
+## Application Architecture
 
-- Not Delayed: The delivery is not delayed by more than three working days
-- Delayed: The delivery is delayed by more than three working days
+The application is implemented as a FastAPI-based machine learning web application.
 
-## Key Steps Performed
+```text
+backend/main.py                    FastAPI application entry point
+backend/api/routes/                API route handlers
+backend/schemas/                   Request and response validation schemas
+backend/ml/                        Trained model and feature files
+backend/static/                    Active HTML, CSS, and JavaScript frontend
+database/                          Database-related files
+requirements.txt                   Python package dependencies
+RUN_INSTRUCTIONS.md                Steps to run the application
+```
 
-- Project Setup
-- Dataset Loading
-- Dataset Understanding
-- Missing Value Analysis
-- Duplicate Value Analysis
-- Target Column Identification
-- Target Class Distribution Analysis
-- Numerical and Categorical Feature Separation
-- Categorical Delay Rate Analysis
-- Outlier Checking
-- Correlation Analysis
-- Date Feature Engineering
-- Feature and Target Preparation
-- Train-Test Split
-- Preprocessing Pipeline Creation
-- Model Selection
-- Improved Random Forest Model Training
-- Model Evaluation
-- Threshold Tuning
-- Final Threshold Selection
-- Confusion Matrix Generation
-- Confusion Matrix Interpretation
-- Feature Importance Analysis
-- Sample Prediction Testing
-- Final Model Saving
+The active user interface is served from:
 
-## Technologies Used
+```text
+backend/static/index.html
+backend/static/app.js
+backend/static/styles.css
+```
 
-- Python
-- Pandas
-- NumPy
-- Matplotlib
-- Scikit-Learn
-- Joblib
-- Google Colab
+The `frontend/` folder is retained as an optional or future frontend extension. It is not required for the current FastAPI run command.
+## Current Limitations
 
-## Important Features Considered
+This application is designed as a machine learning decision-support system for construction material delivery risk prediction. The current version has the following limitations:
 
-The project uses delivery-related, supplier-related, site-related, and schedule-related features for prediction.
+* The model predicts delay risk using historical structured delivery features and does not use live GPS tracking data.
+* The application does not currently integrate real-time traffic, weather, or port/customs API data.
+* Some dashboard, alert, analytics, and simulator sections may use demo data for visualization and presentation purposes.
+* The prediction output should support planner decision-making, but it should not completely replace human judgment.
+* The model performance depends on the quality, completeness, and representativeness of the training dataset.
+* The application is currently designed for local execution in VS Code using FastAPI and Uvicorn.
 
-Important features include:
+## Future Enhancements
 
-- Supplier Tier
-- Delivery Terms
-- Site Access Restriction Level
-- Import or Customs Hold Liability
-- Market Shortage Stress Band
-- Supplier Rolling OTIF Band
-- Packaging and Handling Complexity
-- Order Placed Date
-- Committed Delivery Date
-- Other Construction Supply-Chain Factors
+The following improvements can be added in future versions of the project:
 
-## Feature Engineering
+* Integrate live shipment tracking data from logistics providers.
+* Add real-time traffic, weather, and customs-status API integration.
+* Store prediction history and planner actions in a production database.
+* Add role-based dashboards for procurement teams, planners, and project managers.
+* Improve explainability using SHAP or LIME-based model interpretation.
+* Add automated email or notification alerts for high-risk deliveries.
+* Deploy the application on a cloud platform for remote access.
+* Add supplier performance benchmarking using historical OTIF and delay records.
+* Extend the what-if simulator to compare supplier, carrier, and lead-time alternatives.
+* Add downloadable prediction reports in PDF or Excel format.
 
-Date feature engineering was applied to convert raw date columns into useful machine learning features.
+---
 
-The date columns were transformed into:
+## 1. Project Directory Structure
 
-- Month
-- Day of Week
-- Quarter
+```text
+ML-proj-kiran/
+├── backend/
+│   ├── api/
+│   │   ├── dependencies/
+│   │   │   └── auth.py             # JWT & Role Access Controls
+│   │   ├── middleware/
+│   │   └── routes/
+│   │       ├── auth.py             # Auth endpoints (signup/login/me)
+│   │       ├── predict.py          # ML prediction, feature contributions, and AI explanations
+│   │       ├── suppliers.py        # Supplier scorecards, rankings, materials
+│   │       ├── planner.py          # Lead days & buffer arithmetic calculator
+│   │       ├── analytics.py        # Dashboard KPIs & aggregated charts
+│   │       ├── copilot.py          # AI procurement assistant chat
+│   │       ├── what_if.py          # Scenario simulation comparison
+│   │       └── reports.py          # openpyxl Styled Excel spreadsheets generator
+│   ├── database/
+│   │   └── db.py                   # SQLAlchemy connection & DB auto-seeder
+│   ├── ml/
+│   │   ├── predictor.py            # Updated ML prediction wrapper
+│   │   ├── final_model_pipeline.joblib  # New Logistic Regression pipeline
+│   │   ├── feature_columns.json     # Exact 26 model input columns
+│   │   └── metadata.json            # Threshold and model metadata
+│   ├── models/
+│   │   ├── user.py, supplier.py, material.py, order.py, alert.py, prediction.py
+│   ├── schemas/
+│   │   └── schemas.py              # Pydantic request/response validations
+│   ├── services/
+│   │   ├── prediction_service.py, supplier_service.py, planner_service.py,
+│   │   ├── analytics_service.py, recommendation_service.py, ai_service.py
+│   ├── static/                     # Instant Preview Local UI (SPA)
+│   │   ├── index.html              # HTML DOM Layout
+│   │   ├── app.js                  # Frontend controllers, Chart.js integrations
+│   │   └── styles.css              # Glassmorphism dark-theme styling
+│   ├── tests/
+│   │   └── test_api.py             # Pytest automated test scripts
+│   ├── config.py                   # Environment settings & JWT credentials
+│   └── main.py                     # Uvicorn FastAPI server entrypoint
+│
+├── frontend/                       # Production Next.js App Router Templates
+│   ├── app/
+│   │   ├── dashboard/page.tsx, prediction/page.tsx, suppliers/page.tsx,
+│   │   ├── planner/page.tsx, analytics/page.tsx, alerts/page.tsx,
+│   │   ├── copilot/page.tsx, what-if/page.tsx
+│   ├── components/
+│   ├── services/
+│   │   └── api.ts                  # Next.js API client caller wrapper
+│   └── types/
+│       └── index.ts                # TypeScript interfaces
+│
+└── database/
+    ├── schema.sql                  # Production DDL PostgreSQL schema
+    └── seed_data.sql               # Production seed insert statements
+```
 
-This helps the model understand whether certain months, weekdays, or quarters have higher chances of delivery delay.
+---
 
-## Final Model Selected
+## 2. API Documentation
 
-The final selected model is the Improved Random Forest Classifier.
+All routes reside under the `/api` prefix and require a JWT token (`Authorization: Bearer <token>`) except `/auth/signup` and `/auth/login`.
 
-Random Forest was selected because it performs well on structured construction supply-chain data. It can handle nonlinear relationships and provides feature importance, which helps explain the main factors behind material delivery slippage.
+### Authentication
+- `POST /auth/signup`: Registers a new user. Expects `UserCreate` JSON body.
+- `POST /auth/login`: Validates credentials, returns JWT token. Expects `UserLogin` JSON body.
+- `GET /auth/me`: Retrieves current active profile.
 
-The model was improved using parameter tuning and class weighting to give more importance to delayed delivery cases.
+### Delivery Risk Prediction
+- `POST /predict`: Evaluates slippage probability.
+  - **Request Body**: JSON mapping all operational variables:
+    - `committed_delivery_date`: string ("YYYY-MM-DD")
+    - `planned_lead_calendar_days`: int
+    - `distance_supplier_to_site_km`: int
+    - `material_category`: string
+    - `supplier_tier`: string
+    - `delivery_terms`: string
+    - `site_access_restriction_level`: string
+    - `project_sector`: string
+    - `region_site`: string
+    - `order_value_band_gbp`: string
+    - `shipment_mode`: string
+  - **Response Output**:
+    ```json
+    {
+      "delay_probability": 0.82,
+      "risk_score": 82,
+      "risk_level": "HIGH",
+      "expected_delay_days": 6,
+      "shap_features": [
+        { "feature": "supplier_tier_Spot / Non-Framework", "display_name": "Supplier Tier: Spot / Non-Framework", "shap_value": 0.185 }
+      ],
+      "ai_explanation": "This delivery is likely to be delayed because..."
+    }
+    ```
 
-## Threshold Tuning
+### Supplier Risk Intelligence
+- `GET /suppliers`: Lists all suppliers sorted by reliability rating.
+- `GET /suppliers/materials`: Lists the material product catalog.
+- `GET /suppliers/rankings`: Returns Top 5 Performers and High-Risk Suppliers.
+- `GET /suppliers/{supplier_id}`: Retrieves detailed OTIF metrics for a specific partner.
 
-Threshold tuning was performed to improve the model’s ability to detect delayed deliveries.
+### Procurement Planner
+- `POST /planner/calculate`: Computes scheduled order dates.
+  - **Request Body**: `required_delivery_date`, `predicted_delay_days`, `safety_buffer_days`, `planned_lead_days`.
+  - **Response**: `recommended_order_date`.
+- `GET /planner/defaults`: Fetch default values (estimated lead time & delay predictions) for a material/supplier.
 
-The final selected threshold is 0.40.
+### Scenario Simulator
+- `POST /what-if/simulate`: Compares baseline operational parameters vs simulated target values. Returns delta cost impacts, risk drop percentages, and days saved.
 
-This threshold was selected because missing an actually delayed delivery is more dangerous than raising a false alarm. In construction planning, failing to detect a risky delivery can cause idle crews, work stoppage, and project schedule slippage.
+### AI Procurement Copilot
+- `POST /copilot/chat`: Process natural language questions using available project and delivery records. Returns structured procurement-support responses.
 
-## Evaluation Metrics
+### Report Downloads (Streaming Excel)
+- `GET /reports/suppliers`: Streams the Supplier Performance spreadsheet.
+- `GET /reports/risk-assessment`: Streams the Active Risk logs spreadsheet.
+- `GET /reports/planning`: Streams the Procurement Scheduling spreadsheet.
+- `GET /reports/project-delays`: Streams the Project sites health registers spreadsheet.
 
-The model was evaluated using:
+---
 
-- Accuracy
-- Precision
-- Recall
-- F1-Score
-- ROC-AUC Score
-- Classification Report
-- Confusion Matrix
+## 3. Local Execution Guide
 
-In this project, recall is especially important because the main goal is to identify as many risky delayed deliveries as possible.
+### Prerequisites
+Make sure Python 3.10+ is installed along with the required libraries:
+```bash
+pip install -r requirements.txt
+```
 
-## Key Findings
+### Start Server
+Run the application from the root directory:
+```bash
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8050 --reload
+```
+Open [http://127.0.0.1:8050](http://127.0.0.1:8050) on your web browser to access the complete, interactive SPA interface.
 
-- The model successfully predicts whether a construction material delivery is likely to be delayed by more than three working days
-- Supplier performance, delivery terms, site access restrictions, customs hold liability, market shortage conditions, and packaging complexity are important factors in delivery slippage prediction
-- Threshold tuning helps improve the detection of risky deliveries
-- False negatives are the most dangerous errors because they represent delayed deliveries that the model failed to identify
-- Feature importance analysis helps construction planners understand the major risk factors behind delivery delays
+### Running Unit Tests
+Validate database connections, prediction algorithms, and REST routes:
+```bash
+python -m pytest backend/tests/test_api.py
+```
 
-## Business Impact
+---
 
-The proposed machine learning solution enables construction teams to:
+## 4. Deployment Guide
 
-- Identify high-risk material deliveries early
-- Reduce idle crew time
-- Protect critical-path construction activities
-- Improve supplier and carrier coordination
-- Take preventive action before delays become serious
-- Reduce project schedule disruption
-- Improve construction supply-chain planning
-- Support data-driven decision-making
+### A. Backend Deployment (Render)
+1. Register a PostgreSQL database instance on Render.
+2. Create a new **Web Service** on Render and connect your GitHub repository.
+3. Configure the environment variables:
+   - `DATABASE_URL`: Set to your Render PostgreSQL connection string.
+   - `JWT_SECRET`: Define a secure secret string.
+   - `OPENAI_API_KEY`: Paste your OpenAI API token (optional; triggers fallbacks if empty).
+4. Define build and start commands:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
 
-## Project Outcome
+### B. Database Initialization in Production
+During application startup, SQLAlchemy automatically queries the active database. If deploying on PostgreSQL, it runs `Base.metadata.create_all` to verify tables exist, and seeds user profiles and materials automatically if the records are blank.
+Alternatively, you can run the DDL declarations in `database/schema.sql` and seeding insert rows in `database/seed_data.sql` directly on your database client.
 
-A complete machine learning-based material delivery slippage prediction solution was developed using an Improved Random Forest Classifier.
+### C. Frontend Deployment (Vercel)
+1. Push the repository to GitHub.
+2. In the Vercel dashboard, click **Add New Project** and import the repository.
+3. Set the root directory of the deployment to `frontend`.
+4. Configure environment variables:
+   - `NEXT_PUBLIC_API_URL`: Paste the URL of your active Render FastAPI backend (e.g. `https://your-backend.onrender.com/api`).
+5. For the current version, run the FastAPI application locally using Uvicorn. The active user interface is served from `backend/static`.
 
-The final model predicts whether a scheduled site material delivery will arrive more than three working days after the committed gate delivery date. The solution helps construction planners identify risky deliveries early and take proactive actions such as supplier follow-up, carrier switching, backup material arrangement, and site work re-sequencing.
 
-This project provides a practical data-driven approach to reducing delivery risk and protecting critical-path construction activities.
+## Updated Model Integration
 
-## Author
+This version uses the newly trained Logistic Regression pipeline exported from the updated notebook. The active model files are placed in `backend/ml/`:
 
-G Kiran Kumar
+- `final_model_pipeline.joblib`
+- `feature_columns.json`
+- `metadata.json`
+
+The selected classification threshold is `0.45`. The backend derives the new notebook date features (`order_month`, `order_dayofweek`, `committed_month`, `committed_dayofweek`, and `committed_is_weekend`) before calling the model.
+
+## Date and Lead-Time Validation
+
+The model predicts whether a delivery will arrive more than three working days after the committed delivery date. A committed date far in the future does not automatically mean the delivery is safe, because supplier reliability, customs risk, access restrictions, market shortage stress, shipment mode, and other operational factors still matter.
+
+To avoid misleading predictions, the dashboard and backend now check whether the committed delivery date is consistent with the entered `planned_lead_calendar_days`.
+
+Example: if the committed delivery date is 365 days from today but the planned lead time is only 30 days, the app will block the prediction and ask the user to correct the lead time or provide a consistent order placed date. This prevents the model from treating a one-year future date as a normal 30-day operational delivery.
+
+For VS Code setup and run commands, see `RUN_INSTRUCTIONS.md`.
