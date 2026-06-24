@@ -225,17 +225,18 @@ document.getElementById("theme-toggle-console").addEventListener("click", () => 
     }
 });
 
-// Role selector binding
-document.getElementById("user-role-selector").addEventListener("change", (e) => {
-    const role = e.target.value;
-    document.getElementById("user-display-role").textContent = role;
-    const nameMap = {
-        "Admin": "Sarah Jenkins",
-        "Procurement Manager": "David Miller",
-        "Project Manager": "Elena Rostova"
-    };
-    document.getElementById("user-display-name").textContent = nameMap[role] || "User";
-});
+// Demo user display
+const userDisplayName = document.getElementById("user-display-name");
+const userDisplayRole = document.getElementById("user-display-role");
+
+if (userDisplayName) {
+    userDisplayName.textContent = "Demo User";
+}
+
+if (userDisplayRole) {
+    userDisplayRole.textContent = "Application User";
+}
+
 
 // 3. WIZARD CONTROLLER
 window.navigateWizard = function(stepNum) {

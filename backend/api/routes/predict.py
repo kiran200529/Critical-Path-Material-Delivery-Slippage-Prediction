@@ -5,20 +5,17 @@ from backend.database.db import get_db
 from backend.schemas.schemas import PredictRequest, PredictResponse
 from backend.services.prediction_service import predict_delivery_risk
 from backend.services.ai_service import generate_prediction_explanation
-from backend.api.dependencies.auth import get_current_user, RoleChecker
+from backend.api.dependencies.auth import get_current_user
 from backend.models.user import User
 
 router = APIRouter(prefix="/predict", tags=["Delivery Risk Prediction"])
-
-# Allow Admin and Procurement Manager to run predictions
-prediction_permission = Depends(RoleChecker(["Admin", "Procurement Manager", "Project Manager"]))
 
 @router.post("", response_model=PredictResponse, status_code=status.HTTP_200_OK)
 def run_prediction(
     request: PredictRequest,
     order_id: Optional[int] = Query(None, description="Optional Order ID to log the prediction against"),
     db: Session = Depends(get_db),
-    user: User = prediction_permission
+    user: User = Depends(get_current_user)
 ):
     """
     Predicts the risk of delivery slippage (> 3 working days) for a construction order.

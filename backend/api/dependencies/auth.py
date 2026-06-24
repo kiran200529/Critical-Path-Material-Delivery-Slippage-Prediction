@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional
 from passlib.context import CryptContext
 from backend.config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.database.db import get_db
@@ -52,11 +52,11 @@ async def get_current_user(
     # If no token is provided, fall back to guest user for development/preview convenience,
     # but raise exception if in production mode.
     if not token:
-        # For demonstration purposes, we will return the seed admin user if no token is passed.
+        # For demonstration purposes, we will return the seed demo user if no token is passed.
         # This makes API testing and browser UI access extremely smooth without forcing a login loop.
-        admin_user = db.query(User).filter(User.email == "admin@platform.com").first()
-        if admin_user:
-            return admin_user
+        demo_user = db.query(User).filter(User.email == "demo@platform.com").first()
+        if demo_user:
+            return demo_user
         raise credentials_exception
         
     try:
@@ -73,18 +73,3 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
-
-class RoleChecker:
-    """
-    Dependency that checks if the logged-in user belongs to allowed roles.
-    """
-    def __init__(self, allowed_roles: List[str]):
-        self.allowed_roles = allowed_roles
-
-    def __call__(self, user: User = Depends(get_current_user)) -> User:
-        if user.role not in self.allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation forbidden. Required roles: {self.allowed_roles}. Current role: {user.role}"
-            )
-        return user

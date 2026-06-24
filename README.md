@@ -4,7 +4,7 @@ This project is a machine learning-based construction procurement intelligence a
 
 The application uses a trained Logistic Regression pipeline with threshold-based classification to identify high-risk material deliveries. It supports delivery risk prediction, business decision summaries, recommended action plans, supplier monitoring, procurement planning, what-if simulation, analytics visualization, and alert-style project monitoring.
 
-The main objective of this project is to help planners, procurement teams, and project managers identify risky material deliveries early so they can follow up with suppliers, arrange alternate carriers, resequence work, or escalate critical-path risks before delays affect construction progress.
+The main objective of this project is to help planners and procurement teams identify risky material deliveries early so they can follow up with suppliers, arrange alternate carriers, resequence work, or escalate critical-path risks before delays affect construction progress.
 
 ## Problem Statement
 
@@ -86,7 +86,7 @@ The following improvements can be added in future versions of the project:
 * Integrate live shipment tracking data from logistics providers.
 * Add real-time traffic, weather, and customs-status API integration.
 * Store prediction history and planner actions in a production database.
-* Add role-based dashboards for procurement teams, planners, and project managers.
+* Add customized dashboard views for procurement planning, supplier monitoring, and delivery-risk analysis.
 * Improve explainability using SHAP or LIME-based model interpretation.
 * Add automated email or notification alerts for high-risk deliveries.
 * Deploy the application on a cloud platform for remote access.
@@ -103,7 +103,7 @@ ML-proj-kiran/
 ├── backend/
 │   ├── api/
 │   │   ├── dependencies/
-│   │   │   └── auth.py             # JWT & Role Access Controls
+│   │   │   └── auth.py             # JWT authentication support
 │   │   ├── middleware/
 │   │   └── routes/
 │   │       ├── auth.py             # Auth endpoints (signup/login/me)

@@ -3,9 +3,9 @@
 
 -- 1. Insert Users
 INSERT INTO users (name, email, password, role) VALUES
-('Sarah Jenkins (Admin)', 'admin@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Admin'),
-('David Miller (Procurement)', 'procurement@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Procurement Manager'),
-('Elena Rostova (Project)', 'project@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Project Manager');
+('Demo User', 'demo@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Application User'),
+('Demo Procurement User', 'demo.procurement@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Application User'),
+('Demo Planning User', 'demo.planning@platform.com', '$2b$12$vFvVR8nlwU5.SbzUcmGe5eKH87uwi2GvUY.5oTXX69CcZycqc.Bpu', 'Application User');
 
 -- 2. Insert Suppliers
 INSERT INTO suppliers (id, name, supplier_type, risk_score, performance_rating) VALUES
