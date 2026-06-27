@@ -34,6 +34,7 @@ def init_db():
     if the database is currently empty.
     """
     from backend.models.user import User
+    from backend.models.password_reset import PasswordResetToken
     from backend.models.supplier import Supplier
     from backend.models.material import Material
     from backend.models.order import Order
@@ -54,7 +55,7 @@ def init_db():
             
             # 1. Add Users
             users = [
-                User(name='Demo User', email='demo@platform.com', password='$2b$12$AocMs1kF/5JEGR7ZQpzNtu5ukN3SBulOEK4KMXPZ/ynOnsz9OSeHq', role='Application User')
+                User(name='Project User', email='user@slippageapp.com', password='$2b$12$O8J.HoileOBHFRDlAFakRuQHUyZUz2DqiM5h8Uw0qKlhZS1E3cePG', role='User')
             ]
             db.add_all(users)
             db.commit()
@@ -128,6 +129,23 @@ def init_db():
             db.commit()
             
             print("Database seeded successfully.")
+
+        # Ensure the main project user account is available for existing databases.
+        project_user = db.query(User).filter(User.email == 'user@slippageapp.com').first()
+        if project_user:
+            project_user.name = 'Project User'
+            project_user.role = 'User'
+        else:
+            db.add(User(
+                name='Project User',
+                email='user@slippageapp.com',
+                password='$2b$12$O8J.HoileOBHFRDlAFakRuQHUyZUz2DqiM5h8Uw0qKlhZS1E3cePG',
+                role='User'
+            ))
+
+        db.query(User).filter(User.email == 'demo@platform.com').delete()
+        db.commit()
+
     except Exception as e:
         db.rollback()
         print(f"Error seeding database: {e}")

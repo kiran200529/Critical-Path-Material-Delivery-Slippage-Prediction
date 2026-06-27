@@ -71,6 +71,26 @@ class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
 
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    reset_token: Optional[str] = None
+    reset_url: Optional[str] = None
+
+
+class ResetPasswordRequest(BaseModel):
+    reset_token: str = Field(..., min_length=20)
+    new_password: str = Field(..., min_length=8)
+    confirm_password: str = Field(..., min_length=8)
+
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
 # --- ML PREDICTION SCHEMAS ---
 class PredictRequest(BaseModel):
     committed_delivery_date: str = Field(..., description="Date format YYYY-MM-DD")

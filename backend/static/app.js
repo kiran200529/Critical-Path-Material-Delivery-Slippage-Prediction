@@ -32,7 +32,7 @@ function showApplication() {
     document.body.classList.add("authenticated");
 
     const storedUser = getStoredUser();
-    const userName = storedUser.name || "Demo User";
+    const userName = storedUser.name || "Project User";
 
     const userDisplayName = document.getElementById("user-display-name");
     const userDisplayRole = document.getElementById("user-display-role");
@@ -42,7 +42,7 @@ function showApplication() {
     }
 
     if (userDisplayRole) {
-        userDisplayRole.textContent = "Application User";
+        userDisplayRole.textContent = storedUser.role || "User";
     }
 
     if (!document.getElementById("logout-button")) {
@@ -63,9 +63,59 @@ function showLogin() {
     document.body.classList.remove("authenticated");
 }
 
+function showAuthPanel(panelName) {
+    const panels = {
+        login: document.getElementById("login-panel"),
+        forgot: document.getElementById("forgot-panel"),
+        reset: document.getElementById("reset-panel")
+    };
+
+    Object.values(panels).forEach((panel) => {
+        if (panel) {
+            panel.classList.add("is-hidden");
+        }
+    });
+
+    if (panels[panelName]) {
+        panels[panelName].classList.remove("is-hidden");
+    }
+
+    ["login-error", "forgot-message", "reset-message"].forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = "";
+            element.classList.remove("success-message");
+        }
+    });
+}
+
+async function readApiError(response, fallbackMessage) {
+    try {
+        const data = await response.json();
+        return data.detail || data.message || fallbackMessage;
+    } catch {
+        return fallbackMessage;
+    }
+}
+
 function setupLogin() {
     const loginForm = document.getElementById("login-form");
     const loginError = document.getElementById("login-error");
+
+    const forgotForm = document.getElementById("forgot-password-form");
+    const forgotMessage = document.getElementById("forgot-message");
+    const showForgotButton = document.getElementById("show-forgot-password");
+
+    const resetForm = document.getElementById("reset-password-form");
+    const resetMessage = document.getElementById("reset-message");
+
+    const backToLoginFromForgot = document.getElementById("back-to-login-from-forgot");
+    const backToLoginFromReset = document.getElementById("back-to-login-from-reset");
+
+    const resetTokenInput = document.getElementById("reset-token");
+
+    const params = new URLSearchParams(window.location.search);
+    const resetTokenFromUrl = params.get("reset_token");
 
     if (getStoredToken()) {
         showApplication();
@@ -74,45 +124,175 @@ function setupLogin() {
 
     showLogin();
 
-    if (!loginForm) {
-        return;
+    if (resetTokenFromUrl && resetTokenInput) {
+        resetTokenInput.value = resetTokenFromUrl;
+        showAuthPanel("reset");
+    } else {
+        showAuthPanel("login");
     }
 
-    loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
+    if (showForgotButton) {
+        showForgotButton.addEventListener("click", () => {
+            const loginEmail = document.getElementById("login-email");
+            const forgotEmail = document.getElementById("forgot-email");
 
-        const email = document.getElementById("login-email").value.trim();
-        const password = document.getElementById("login-password").value;
-
-        if (loginError) {
-            loginError.textContent = "";
-        }
-
-        try {
-            const response = await window.fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email, password })
-            });
-
-            if (!response.ok) {
-                throw new Error("Invalid email or password.");
+            if (loginEmail && forgotEmail && loginEmail.value.trim()) {
+                forgotEmail.value = loginEmail.value.trim();
             }
 
-            const data = await response.json();
+            showAuthPanel("forgot");
+        });
+    }
 
-            localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
-            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { name: "Demo User" }));
+    if (backToLoginFromForgot) {
+        backToLoginFromForgot.addEventListener("click", () => {
+            showAuthPanel("login");
+        });
+    }
 
-            window.location.reload();
-        } catch (error) {
+    if (backToLoginFromReset) {
+        backToLoginFromReset.addEventListener("click", () => {
+            showAuthPanel("login");
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById("login-email").value.trim();
+            const password = document.getElementById("login-password").value;
+
             if (loginError) {
-                loginError.textContent = error.message || "Login failed. Please try again.";
+                loginError.textContent = "";
             }
-        }
-    });
+
+            try {
+                const response = await window.fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await readApiError(response, "Invalid email or password."));
+                }
+
+                const data = await response.json();
+
+                localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+                localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { name: "Project User", role: "User" }));
+
+                window.location.reload();
+            } catch (error) {
+                if (loginError) {
+                    loginError.textContent = error.message || "Login failed. Please try again.";
+                }
+            }
+        });
+    }
+
+    if (forgotForm) {
+        forgotForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById("forgot-email").value.trim();
+
+            if (forgotMessage) {
+                forgotMessage.textContent = "";
+                forgotMessage.classList.remove("success-message");
+            }
+
+            try {
+                const response = await window.fetch("/api/auth/forgot-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await readApiError(response, "Unable to process password reset request."));
+                }
+
+                const data = await response.json();
+
+                if (data.reset_token && resetTokenInput) {
+                    resetTokenInput.value = data.reset_token;
+                    showAuthPanel("reset");
+                    if (resetMessage) {
+                        resetMessage.textContent = "Account verified. Please set a new password.";
+                        resetMessage.classList.add("success-message");
+                    }
+                } else if (forgotMessage) {
+                    forgotMessage.textContent = data.message || "If the email exists, password reset instructions have been generated.";
+                }
+            } catch (error) {
+                if (forgotMessage) {
+                    forgotMessage.textContent = error.message || "Unable to process password reset request.";
+                }
+            }
+        });
+    }
+
+    if (resetForm) {
+        resetForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const resetToken = document.getElementById("reset-token").value;
+            const newPassword = document.getElementById("new-password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (resetMessage) {
+                resetMessage.textContent = "";
+                resetMessage.classList.remove("success-message");
+            }
+
+            if (newPassword !== confirmPassword) {
+                if (resetMessage) {
+                    resetMessage.textContent = "New password and confirm password do not match.";
+                }
+                return;
+            }
+
+            try {
+                const response = await window.fetch("/api/auth/reset-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        reset_token: resetToken,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await readApiError(response, "Unable to reset password."));
+                }
+
+                document.getElementById("new-password").value = "";
+                document.getElementById("confirm-password").value = "";
+
+                showAuthPanel("login");
+
+                if (loginError) {
+                    loginError.textContent = "Password reset successful. Please login with the new password.";
+                    loginError.classList.add("success-message");
+                }
+
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (error) {
+                if (resetMessage) {
+                    resetMessage.textContent = error.message || "Unable to reset password.";
+                }
+            }
+        });
+    }
 }
 
 setupLogin();
@@ -345,16 +525,16 @@ document.getElementById("theme-toggle-console").addEventListener("click", () => 
     }
 });
 
-// Demo user display
+// User display
 const userDisplayName = document.getElementById("user-display-name");
 const userDisplayRole = document.getElementById("user-display-role");
 
 if (userDisplayName) {
-    userDisplayName.textContent = "Demo User";
+    userDisplayName.textContent = "Project User";
 }
 
 if (userDisplayRole) {
-    userDisplayRole.textContent = "Application User";
+    userDisplayRole.textContent = storedUser.role || "User";
 }
 
 

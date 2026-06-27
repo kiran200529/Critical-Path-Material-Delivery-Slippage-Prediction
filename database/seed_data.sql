@@ -3,9 +3,9 @@
 
 -- 1. Insert Users
 INSERT INTO users (name, email, password, role) VALUES
-('Demo User', 'demo@platform.com', '$2b$12$AocMs1kF/5JEGR7ZQpzNtu5ukN3SBulOEK4KMXPZ/ynOnsz9OSeHq', 'Application User'),
-('Demo Procurement User', 'demo.procurement@platform.com', '$2b$12$AocMs1kF/5JEGR7ZQpzNtu5ukN3SBulOEK4KMXPZ/ynOnsz9OSeHq', 'Application User'),
-('Demo Planning User', 'demo.planning@platform.com', '$2b$12$AocMs1kF/5JEGR7ZQpzNtu5ukN3SBulOEK4KMXPZ/ynOnsz9OSeHq', 'Application User');
+('Project User', 'user@slippageapp.com', '$2b$12$Nqs3uvFbnKuR2epHdp6oauqO2g4Jp2JB32NC/rRTgnp54E3D9YBqq', 'User'),
+('Demo Procurement User', 'demo.procurement@platform.com', '$2b$12$Nqs3uvFbnKuR2epHdp6oauqO2g4Jp2JB32NC/rRTgnp54E3D9YBqq', 'User'),
+('Demo Planning User', 'demo.planning@platform.com', '$2b$12$Nqs3uvFbnKuR2epHdp6oauqO2g4Jp2JB32NC/rRTgnp54E3D9YBqq', 'User');
 
 -- 2. Insert Suppliers
 INSERT INTO suppliers (id, name, supplier_type, risk_score, performance_rating) VALUES
