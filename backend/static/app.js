@@ -57,6 +57,12 @@ function showApplication() {
         });
         document.body.appendChild(logoutBtn);
     }
+
+    setTimeout(() => {
+        if (typeof loadInitialData === "function") {
+            loadInitialData(true);
+        }
+    }, 800);
 }
 
 function showLogin() {
@@ -528,13 +534,14 @@ document.getElementById("theme-toggle-console").addEventListener("click", () => 
 // User display
 const userDisplayName = document.getElementById("user-display-name");
 const userDisplayRole = document.getElementById("user-display-role");
+const currentStoredUser = getStoredUser();
 
 if (userDisplayName) {
-    userDisplayName.textContent = "Project User";
+    userDisplayName.textContent = currentStoredUser.name || "Project User";
 }
 
 if (userDisplayRole) {
-    userDisplayRole.textContent = storedUser.role || "User";
+    userDisplayRole.textContent = currentStoredUser.role || "User";
 }
 
 
@@ -610,41 +617,8 @@ function createTickerItemHTML(item) {
 
 // 5. MASTER DROP DOWNS POPULATION
 async function populateDropdowns() {
-    try {
-        const supRes = await authFetch(`${API_BASE}/suppliers`);
-        const suppliers = await supRes.json();
-        
-        const matRes = await authFetch(`${API_BASE}/suppliers/materials`);
-        const materials = await matRes.json();
-        
-        const predMat = document.getElementById("pred-material");
-        const predSup = document.getElementById("pred-supplier");
-        const planMat = document.getElementById("plan-material");
-        const planSup = document.getElementById("plan-supplier");
-        
-        predMat.innerHTML = "";
-        predSup.innerHTML = "";
-        planMat.innerHTML = "";
-        planSup.innerHTML = "";
-        
-        materials.forEach(m => {
-            const opt = `<option value="${m.id}" data-category="${m.category}">${m.material_name} (${m.category})</option>`;
-            predMat.insertAdjacentHTML("beforeend", opt);
-            planMat.insertAdjacentHTML("beforeend", opt);
-        });
-        
-        suppliers.forEach(s => {
-            const opt = `<option value="${s.id}" data-tier="${s.supplier_type}">${s.name} - ${s.supplier_type.replace("  ", " - ")}</option>`;
-            predSup.insertAdjacentHTML("beforeend", opt);
-            planSup.insertAdjacentHTML("beforeend", opt);
-        });
-        
-        planSup.addEventListener("change", triggerPlannerDefaults);
-        planMat.addEventListener("change", triggerPlannerDefaults);
-        document.getElementById("plan-required-date").addEventListener("change", triggerPlannerDefaults);
-        
-    } catch (e) {
-        console.error("Error populating select listings", e);
+    if (typeof loadInitialData === "function") {
+        await loadInitialData(true);
     }
 }
 
@@ -674,6 +648,90 @@ async function triggerPlannerDefaults() {
         document.getElementById("planner-form").dataset.delay = defaults.predicted_delay_days;
     } catch (e) {
         console.error("Error fetching planner defaults", e);
+    }
+}
+
+
+// 5. INITIAL DROPDOWN DATA LOAD
+let dropdownDataLoaded = false;
+
+async function loadInitialData(forceReload = false) {
+    if (dropdownDataLoaded && !forceReload) {
+        return;
+    }
+
+    try {
+        const supRes = await authFetch(`${API_BASE}/suppliers`);
+        if (!supRes.ok) {
+            throw new Error(`Supplier API failed with status ${supRes.status}`);
+        }
+        const suppliers = await supRes.json();
+
+        const matRes = await authFetch(`${API_BASE}/suppliers/materials`);
+        if (!matRes.ok) {
+            throw new Error(`Materials API failed with status ${matRes.status}`);
+        }
+        const materials = await matRes.json();
+
+        const predMat = document.getElementById("pred-material");
+        const predSup = document.getElementById("pred-supplier");
+        const planSup = document.getElementById("planner-supplier");
+        const planMat = document.getElementById("planner-material");
+
+        if (!predMat && !predSup && !planSup && !planMat) {
+            console.warn("No dropdown elements found for supplier/material loading.");
+            return;
+        }
+
+        if (predMat) {
+            predMat.innerHTML = '<option value="">Select Material Catalog Item</option>';
+            materials.forEach((m) => {
+                predMat.insertAdjacentHTML(
+                    "beforeend",
+                    `<option value="${m.id}" data-category="${m.category}">${m.material_name} (${m.category})</option>`
+                );
+            });
+        }
+
+        if (planMat) {
+            planMat.innerHTML = '<option value="">Select Material Catalog Item</option>';
+            materials.forEach((m) => {
+                planMat.insertAdjacentHTML(
+                    "beforeend",
+                    `<option value="${m.id}" data-category="${m.category}">${m.material_name} (${m.category})</option>`
+                );
+            });
+        }
+
+        if (predSup) {
+            predSup.innerHTML = '<option value="">Select Proposed Supply Partner</option>';
+            suppliers.forEach((s) => {
+                const supplierType = (s.supplier_type || "").replace("  ", " - ");
+                predSup.insertAdjacentHTML(
+                    "beforeend",
+                    `<option value="${s.id}" data-tier="${s.supplier_type}">${s.name} - ${supplierType}</option>`
+                );
+            });
+        }
+
+        if (planSup) {
+            planSup.innerHTML = '<option value="">Select Proposed Supply Partner</option>';
+            suppliers.forEach((s) => {
+                const supplierType = (s.supplier_type || "").replace("  ", " - ");
+                planSup.insertAdjacentHTML(
+                    "beforeend",
+                    `<option value="${s.id}" data-tier="${s.supplier_type}">${s.name} - ${supplierType}</option>`
+                );
+            });
+        }
+
+        dropdownDataLoaded = true;
+
+        console.log(
+            `Dropdown data loaded successfully: ${materials.length} materials, ${suppliers.length} suppliers.`
+        );
+    } catch (error) {
+        console.error("Failed to load supplier/material dropdown data:", error);
     }
 }
 
@@ -1393,3 +1451,26 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("plan-required-date").value = formattedTomorrow;
     document.getElementById("what-if-date").value = formattedTomorrow;
 });
+
+
+// Final authenticated data bootstrap.
+// This runs after the full script is loaded and ensures dropdown data is loaded after login.
+function runAuthenticatedStartupLoads() {
+    if (!getStoredToken()) {
+        return;
+    }
+
+    setTimeout(() => {
+        if (typeof loadInitialData === "function") {
+            loadInitialData(true);
+        }
+    }, 1200);
+}
+
+window.addEventListener("load", runAuthenticatedStartupLoads);
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        runAuthenticatedStartupLoads();
+    }
+});
+
